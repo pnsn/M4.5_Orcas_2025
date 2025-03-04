@@ -1,3 +1,19 @@
+"""
+:module: M4.5_Orcas_2025/src/snuffle_aftershocks.py
+:auth: Nathan T. Stevens
+:email: ntsteven@uw.edu
+:org: Pacific Northwest Seismic Network
+:license: GNU GPLv3
+:purpose: This script queries a specified period of waveform data from
+    stations near the M4.5 earthquake at Orcas Island on March 3rd 2025
+    and launches a Pyrocko Snuffler instance to display those waveforms
+    for analyst picking. Picks are automatically saved to the `data/snuffler`
+    directory and in subsequent sessions called by this script, the
+    `data/snuffler/_markers_working.dat` file is re-loaded into snuffler
+    to load prior picking progress.
+"""
+
+
 import os
 from pathlib import Path
 from obspy import *

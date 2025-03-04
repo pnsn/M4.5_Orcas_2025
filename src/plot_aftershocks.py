@@ -1,3 +1,20 @@
+"""
+:module: M4.5_Orcas_2025/src/plot_aftershocks.py
+:auth: Nathan T. Stevens
+:email: ntsteven@uw.edu
+:org: Pacific Northwest Seismic Network
+:license: GNU GPLv3
+:purpose: This script generates Figure 3 in the PNSN Seismo Blog post about
+    the M4.5 earthquake at Orcas Island on March 3rd 2025. It uses a CSV of
+    event metadata exported from Jiggle for event location, origin time, 
+    and magnitude values. The nodal plane orientation for the M4.5 earthquake
+    was manually entered.
+
+    The map uses OpenStreetMap imagery for its basemap, which requires the
+    included attribution to meet their terms of use. 
+
+"""
+
 import os
 from pathlib import Path
 

@@ -1,3 +1,16 @@
+"""
+:module: M4.5_Orcas_2025/src/aftershock_loc_differencer.py
+:auth: Nathan T. Stevens
+:email: ntsteven@uw.edu
+:org: Pacific Northwest Seismic Network
+:license: GNU GPLv3
+:purpose: A set of scripts for parsing a plain-text paste of a Jiggle origin/magnitude solution string
+  and getting time and distance differences between a given event (ideally an aftershock) and the 
+  M4.5 mainshock at Orcas Island on March 3rd 2025.
+
+"""
+
+
 from pathlib import Path
 import pandas as pd
 from obspy import UTCDateTime
