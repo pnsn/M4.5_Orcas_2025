@@ -2,12 +2,14 @@
 Visual review tools for identifying aftershocks of the M4.5 earthquake 10 km east of Orcas Island on March 3rd 2025
 and rendering figures for PNSN website content.  
 
+![image](figures/Aftershock_Timeseries_2025-03-04%2013:48:40.451030_250dpi.png)
+
 # Environment
 The `conda` environment to use this repository can be installed using the included `environment.yml` file:  
 ```conda env create -f environment.yml```
 
 # Event Exploration  
-This repository centers around the `src/shnuffle_aftershocks.py` script, which pulls continuous
+This repository centers around the `src/snuffle_aftershocks.py` script, which pulls continuous
 waveform data from the IRIS Data Management Center and displays it in a [Snuffler](https://pyrocko.org/docs/current/apps/snuffler/tutorial.html)
 GUI instance. Picks made during a Snuffler session are written to the `data/snuffler` directory both
 as a time-stamped file (`markers_{timestamp}.dat`) and a working marker set `_markers_working.dat`.
@@ -28,8 +30,8 @@ uses [OpenStreetMap](https://www.openstreetmap.org/#map=5/38.01/-95.84) tiles co
 with their terms of use.
 
 # Authors
-Nathan T. Stevens (ntsteven@uw.edu)
-Alex Hutko (ahutko@uw.edu)
+Nathan T. Stevens (ntsteven@uw.edu)  
+Alex Hutko (ahutko@uw.edu)  
 
 # License
 GNU General Public License v3 (GPLv3)
