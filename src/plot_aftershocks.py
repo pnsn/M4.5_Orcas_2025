@@ -169,7 +169,12 @@ axts.set_ylim([-1, 5])
 axts.set_xlabel(f'Hours Since {df.DATETIME.min().strftime("%Y-%m-%d %H:%M:%S")} (UTC)')
 axts.set_ylabel('Magnitude')
 
-
+# Add completeness magnitude threshold
+xlims = axts.get_xlim()
+axts.plot(xlims, [2.5]*2, color=(9/255,67/255,9/255, 0.5))
+axts.text(12, 2.55, 'Smallest reliably detected earthquake', ha='center', va='bottom',
+          color=(9/255, 67/255, 9/255, 0.75))
+axts.set_xlim(xlims)
 # ADD PNSN LOGO
 logoax = fig.add_axes([0.01, 0.9, 0.3, 0.3], anchor='SE', zorder=-1)
 im = plt.imread(str(LOGO_PNG))
@@ -182,7 +187,7 @@ if issave:
         os.makedirs(str(FIGPATH), exist_ok=False)
     except:
         pass
-    plt.savefig(str(FIGPATH/f'Aftershock_Timeseries_{pd.Timestamp.now()}_{DPI}dpi.{FMT}'), format=FMT, dpi=DPI)
+    plt.savefig(str(FIGPATH/f'Aftershock_Timeseries_{DPI}dpi.{FMT}'), format=FMT, dpi=DPI)
 
 # DISPLAY FIGURE (IF SWITCH IS TURNED ON)
 if isshow:

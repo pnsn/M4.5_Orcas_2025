@@ -2,7 +2,7 @@
 Visual review tools for identifying aftershocks of the M4.5 earthquake 10 km east of Orcas Island on March 3rd 2025
 and rendering figures for PNSN website content.  
 
-![image](figures/Aftershock_Timeseries_2025-03-04%2013:48:40.451030_250dpi.png)
+![image](figures/Aftershock_Timeseries_250dpi.png)
 
 # Environment
 The `conda` environment to use this repository can be installed using the included `environment.yml` file:  
