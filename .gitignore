@@ -1,4 +1,6 @@
 # Ignore rendered figures
-# figures/*.png
+figures/*.png
 # Ignore temporary snuffler markers
 data/snuffler/markers_*.dat
+# Ignore intermediate data files
+processed_data
