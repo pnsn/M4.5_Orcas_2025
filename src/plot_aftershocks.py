@@ -4,11 +4,10 @@
 :email: ntsteven@uw.edu
 :org: Pacific Northwest Seismic Network
 :license: GNU GPLv3
-:purpose: This script generates Figure 3 in the PNSN Seismo Blog post about
-    the M4.5 earthquake at Orcas Island on March 3rd 2025. It uses a CSV of
-    event metadata exported from Jiggle for event location, origin time, 
-    and magnitude values. The nodal plane orientation for the M4.5 earthquake
-    was manually entered.
+:purpose: This script generates the primary figure on the README.md page
+    of this repository. It uses a CSV of event metadata exported from 
+    Jiggle for event location, origin time,  and magnitude values. 
+    The nodal plane orientation for the M4.5 earthquake was manually entered.
 
     The map uses OpenStreetMap imagery for its basemap, which requires the
     included attribution to meet their terms of use. 
@@ -54,6 +53,7 @@ UTM10N = ccrs.UTM(zone=10, southern_hemisphere=False)
 WGS84 = ccrs.PlateCarree()
 ZOOM = 11
 RAD_KM = 12.5
+MIN_MAG = 1.8
 
 def get_distances(df):
     df = df.sort_values('MAG', ascending=False)
@@ -171,8 +171,8 @@ axts.set_ylabel('Magnitude')
 
 # Add completeness magnitude threshold
 xlims = axts.get_xlim()
-axts.plot(xlims, [2.5]*2, color=(9/255,67/255,9/255, 0.5))
-axts.text(12, 2.55, 'Smallest reliably detected earthquake', ha='center', va='bottom',
+axts.plot(xlims, [MIN_MAG]*2, color=(9/255,67/255,9/255, 0.5))
+axts.text(12, MIN_MAG + 0.1, 'Smallest reliably detected earthquakes', ha='center', va='bottom',
           color=(9/255, 67/255, 9/255, 0.75))
 axts.set_xlim(xlims)
 # ADD PNSN LOGO
