@@ -143,7 +143,7 @@ gl.ylines=False
 # MAGNITUDE TIME-SERIES
 axts = fig.add_subplot(gs[-1])
 # Do Mainshock stem
-ml, sl, bl = axts.stem(0, ser_main.MAG, bottom=-1)
+ml, sl, bl = axts.stem(0, ser_main.MAG, bottom=adf.MAG.min() - 0.1)
 # Format marker lines
 ml.set_markerfacecolor('white')
 ml.set_markeredgecolor('blue')
@@ -153,7 +153,7 @@ sl.set_linewidth(2)
 bl.set_color('none')
 
 # Do Stem plot
-ml, sl, bl = axts.stem(adf.orig_off_sec/3600, adf.MAG, bottom = -1)
+ml, sl, bl = axts.stem(adf.orig_off_sec/3600, adf.MAG, bottom = adf.MAG.min() - 0.1)
 # Format marker lines
 ml.set_markerfacecolor('white')
 ml.set_markeredgecolor('red')
@@ -164,7 +164,7 @@ bl.set_color('none')
 # Add gridlines
 axts.grid(linestyle=':')
 # Scale Figure
-axts.set_ylim([-1, 5])
+axts.set_ylim([adf.MAG.min() - 0.1, 5])
 # Label axes
 axts.set_xlabel(f'Hours Since {df.DATETIME.min().strftime("%Y-%m-%d %H:%M:%S")} (UTC)')
 axts.set_ylabel('Magnitude')
