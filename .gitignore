@@ -4,3 +4,5 @@ figures/*.png
 data/snuffler/markers_*.dat
 # Ignore intermediate data files
 processed_data
+# Ingore temporary party files
+.parties
