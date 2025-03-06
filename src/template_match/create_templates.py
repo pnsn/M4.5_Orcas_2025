@@ -92,9 +92,9 @@ def aqms2cat(df, inv, phases=['P','p'], velocity_model='P4', pick_preference='ea
         # Attach magnitude to event
         event.magnitudes.append(magnitude)
         # Set origin as preferred origin
-        event.preferred_origin = origin.resource_id
+        event.preferred_origin_id = origin.resource_id
         # Set magnitude as preferred magnitude
-        event.preferred_magnitude = magnitude.resource_id
+        event.preferred_magnitude_id = magnitude.resource_id
 
         # Attach to catalog
         cat.events.append(event)
@@ -108,15 +108,31 @@ if __name__ == '__main__':
 
     OUTPUT_DIR = ROOT / 'processed_data' / 'templates'
 
-    # DEFINE INVENTORY
-    STAS = 'OLGA,TURTL'
+    # DEFINE INVENTORY QUERY STRINGS
+    STAS = 'OLGA,TURTL'#,MCW'#,LOPEZ'
     NETS = 'UW'
-    CHANS = 'HHZ'
+    CHANS = 'HHZ'#,EHZ'#,HHE,HHN'
+    # DEFINE CHANNEL CODES FOR TRIPLICATION
+    TO_TRIPLICATE = {'OLGA','TURTL','LOPEZ'}
+    TRIPLICATE_CHANS = 'NE'
+    # COMP2 = {'OLGA': 'NE', 'TURTL':'NE', 'MCW': ''}
+
+    MIN_CHAN = 6
 
     # Production station delays from the 2023 P5 station delay set (P5.del)
-    OFFICIAL_STATION_DELAYS = {'UW.OLGA..HHZ': 0.06, 'UW.TURTL..HHZ': 0.01}
+    OFFICIAL_STATION_DELAYS = {
+        'OLGA': 0.06,
+        'TURTL': 0.01,
+        'MCW': 0.07,
+        'LOPEZ': -0.09
+        }
     # Additional delays applied based on visual review of earlier template generation
-    AD_HOC_STATION_DELAYS = {'UW.OLGA..HHZ': 2.15, 'UW.TURTL..HHZ': 0.5 }
+    AD_HOC_STATION_DELAYS = {
+        'OLGA': 2.15 - 0.5,
+        'TURTL': 0.5,
+        'MCW': 1.2,
+        'LOPEZ': 0.
+        }
     # Minimum mean Signal to Noise Ratio for template matching
     TEMPLATE_SNR_MIN = 5.
 
@@ -126,11 +142,11 @@ if __name__ == '__main__':
         'highcut': None,
         'filt_order': 4,
         'samp_rate': 100.,
-        'length': 8.,
+        'length': 10.,
         'prepick': 1.5,
         'process_length': 3600.,
         'min_snr': 1.3,
-        'num_cores': 4,
+        'num_cores': 12,
         'save_progress': False
     }
 
@@ -154,40 +170,59 @@ if __name__ == '__main__':
     # Read event table
     df = pd.read_csv(AQMS_DATA, index_col=[0], parse_dates=['DATETIME'])
     # Strip off mainshock
-    adf = df #.iloc[1:]
+    adf = df #.iloc[:10] #.iloc[1:]
     # Get station inventory
     inv = IRIS.get_stations(
         station=STAS,
         network=NETS,
         channel=CHANS,
-        level='channel')
-    
+        level='channel',
+        endafter=UTCDateTime('2025-03-03T00:00:00')
+    )
     # Convert event table into catalog & model arrival times
     cat = aqms2cat(adf, inv, pick_preference='earliest')
     # Manually apply station delays based on model P5 2023 P-wave station delays
 
     # Apply station delays
-    for event in cat.events:
+    for _e, event in enumerate(cat.events):
+        print(_e)
+        dup_picks = []
+
         for pick in event.picks:
             # Get composite station delay correction
-            dt = OFFICIAL_STATION_DELAYS[pick.waveform_id.id] +\
-                 AD_HOC_STATION_DELAYS[pick.waveform_id.id]
+            _sta = pick.waveform_id.station_code
+            dt = OFFICIAL_STATION_DELAYS[_sta] +\
+                 AD_HOC_STATION_DELAYS[_sta]
             # Apply station delay to pick
             pick.time = pick.time + dt
-
+            # Create additional picks on 
+            if _sta in TO_TRIPLICATE:
+                for _c in TRIPLICATE_CHANS:
+                    ipick = pick.copy()
+                    ipick.waveform_id.channel_code = f'HH{_c}'
+                    ipick.resource_id = ResourceIdentifier()
+                    dup_picks.append(ipick)
+        for _p in dup_picks:
+            event.picks.append(_p)
     # Attach catalog to tckwargs
     tckwargs.update({'catalog': cat})
 
     # Construct templates
     tribe = Tribe().construct(**tckwargs)
     # Rename templates & merge multiple traces
+    ctr = ClusteringTribe()
     for tmp in tribe:
-        tmp.name = ''.join(str(tmp.event.preferred_origin).split('/')[-2:])
-        if len(tmp.st) > 2:
-            breakpoint()
-        tmp.st.merge(method=1)
+        if len(tmp.st) < MIN_CHAN:
+            continue
+        newname = ''.join(tmp.event.preferred_origin().resource_id.id.split('/')[-2:])
+        tmp.name = newname
+        ctr.extend(tmp)
+        # if len(tmp.st) > 2:
+        #     breakpoint()
+        # tmp.st.merge(method=1)
     # Convert tribe into clusteringtribe
-    ctr = ClusteringTribe(templates=tribe.templates)
+    # ctr = ClusteringTribe(templates=tribe.templates)
+    breakpoint()
     # Run template xcorr clustering
     ctr.cluster(**xcckwargs)
     # Populate clusters dataframe
@@ -195,7 +230,7 @@ if __name__ == '__main__':
 
     # Save whole clustering tribe
     ctr.write(str(OUTPUT_DIR/'aqms_event_templates.tgz'))
-
+    breakpoint()
     # Create subset of highest SNR templates per xcorr cluster
     pref_names = []
     for _gn in ctr._c.xcc.unique():

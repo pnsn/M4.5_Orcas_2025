@@ -16,8 +16,8 @@ if __name__ == '__main__':
     CTR_FILE = ROOT / 'processed_data' / 'templates' / 'templates_for_match_filter.tgz'
 
     ## TEMPLATE MATCH PARAMETERIZATION SECTION ##
-    T0 = UTCDateTime('2025-01-01T00:00:00')
-    T1 = UTCDateTime('2025-02-01T00:00:00') #T0 + 6.*3600.
+    T0 = UTCDateTime('2025-02-01T00:00:00')
+    T1 = UTCDateTime()#'2025-02-01T00:00:00') #T0 + 6.*3600.
     THRESH_TYPE = 'MAD'
     THRESH = 8.     # From Shelly & Beroza (2007)
     TRIG_INT = 1.   # 1 second gap between detections minimum
