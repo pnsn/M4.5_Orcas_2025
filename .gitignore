@@ -6,3 +6,5 @@ data/snuffler/markers_*.dat
 processed_data
 # Ingore temporary party files
 .parties
+*.props
+*.props~
