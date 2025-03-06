@@ -38,10 +38,10 @@ FIGPATH = ROOT / 'figures'
 # Path to PNSN Logo PNG
 LOGO_PNG = ROOT / 'data' / 'resources' / 'PNSN_Small_RGB.png'
 # Path to AQMS Event Table CSV output from Jiggle
-AQMS_CSV = ROOT / 'data' / 'jiggle' / 'Event_Table_Output_4MAR2025_1900UTC.csv'
+AQMS_CSV = ROOT / 'data' / 'jiggle' / 'Event_Table_Output_6MAR2025_1800UTC.csv'
 
 # Set figure saving/resolution controls
-issave = True
+issave = False
 DPI = 250
 FMT = 'png'
 
@@ -54,6 +54,14 @@ WGS84 = ccrs.PlateCarree()
 ZOOM = 11
 RAD_KM = 12.5
 MIN_MAG = 1.8
+
+MAIN_COLOR = 'blue'
+AUTO_COLOR = 'goldenrod'
+MANU_COLOR = 'red'
+
+PNSN_Green100 = (9/255,67/255,9/255)
+PNSN_Green50 = (9/255,67/255,9/255, 0.5)
+PNSN_Green25 = (9/255,67/255,9/255, 0.25)
 
 def get_distances(df):
     df = df.sort_values('MAG', ascending=False)
@@ -89,8 +97,14 @@ df = pd.read_csv(AQMS_CSV, index_col=[0], parse_dates=['DATETIME'])
 # Add distances
 df = pd.concat([df, get_distances(df)], axis=1, ignore_index=False)
 # Get series of mainshock statistics
-ser_main = df.loc[62078906]
 
+# Set last manual detection update time
+last_update = pd.Timestamp('2025-03-04T17:00:00')
+
+ser_main = df.loc[62078906]
+df_after = df[df.index.values != 62078906]
+df_manual = df_after[df_after.DATETIME <= last_update]
+df_auto = df_after[df_after.DATETIME >= last_update]
 
 
 # Create connection to OSM tiles
@@ -100,7 +114,7 @@ imagery = OSM(cache=True)
 np1 = [15., 55., 90.]
 # xy = UTM10N.transform_point(x=ser_main.LON, y=ser_main.LAT, src_crs=WGS84)
 x, y = imagery.crs.transform_point(x=ser_main.LON, y=ser_main.LAT, src_crs=ccrs.Geodetic())
-bb_main = beach(np1, xy=(x,y), width=6000, zorder=1)
+bb_main = beach(np1, xy=(x,y), width=6000, zorder=1, facecolor=MAIN_COLOR)
 
 # Initialize Figure
 fig = plt.figure(figsize=(5.6,7.7))
@@ -118,11 +132,16 @@ axmap.add_artist(text)
 # Plotmainshock Beachball
 axmap.add_collection(bb_main)
 
-# Plot Events
-adf = df[df.index.values != ser_main.name]
-axmap.scatter(adf.LON, adf.LAT, s=3**(2 + adf.MAG),
-              c='none', edgecolors='red',
+# Plot Manually Detected events
+axmap.scatter(df_manual.LON, df_manual.LAT, s=3**(2 + df_manual.MAG),
+              c='none', edgecolors=MANU_COLOR,
               alpha=0.75, transform=ccrs.PlateCarree(),
+              linewidths=2)
+
+# Plot Automatically detected events
+axmap.scatter(df_auto.LON, df_auto.LAT, s=3**(2 + df_auto.MAG),
+              c='none', edgecolors=AUTO_COLOR,
+              alpha=0.95, transform=ccrs.PlateCarree(),
               linewidths=2)
 
 # Add legend
@@ -143,38 +162,52 @@ gl.ylines=False
 # MAGNITUDE TIME-SERIES
 axts = fig.add_subplot(gs[-1])
 # Do Mainshock stem
-ml, sl, bl = axts.stem(0, ser_main.MAG, bottom=adf.MAG.min() - 0.1)
-# Format marker lines
-ml.set_markerfacecolor('white')
-ml.set_markeredgecolor('blue')
-ml.set_linewidth(2)
-sl.set_color('blue')
-sl.set_linewidth(2)
-bl.set_color('none')
+for _d, _c in [(ser_main, MAIN_COLOR), (df_manual, MANU_COLOR), (df_auto, AUTO_COLOR)]:
+    ml, sl, bl = axts.stem(_d.orig_off_sec/3600, _d.MAG, bottom=df.MAG.min() - 0.1)
+    
+    # Format marker lines
+    ml.set_markerfacecolor('white')
+    ml.set_markeredgecolor(_c)
+    ml.set_linewidth(2)
+    sl.set_color(_c)
+    sl.set_linewidth(2)
+    bl.set_color('none')
 
-# Do Stem plot
-ml, sl, bl = axts.stem(adf.orig_off_sec/3600, adf.MAG, bottom = adf.MAG.min() - 0.1)
-# Format marker lines
-ml.set_markerfacecolor('white')
-ml.set_markeredgecolor('red')
-ml.set_linewidth(2)
-sl.set_color('red')
-sl.set_linewidth(2)
-bl.set_color('none')
+# # Make stem for mainshock
+
+
+# ml, sl, bl = axts.stem(df_manual.orig_off_sec/3600, df_manual.MAG, bottom = df_manual.MAG.min() - 0.1)
+# # Format marker lines
+# ml.set_markerfacecolor('white')
+# ml.set_markeredgecolor('red')
+# ml.set_linewidth(2)
+# sl.set_color('red')
+# sl.set_linewidth(2)
+# bl.set_color('none')
 # Add gridlines
 axts.grid(linestyle=':')
 # Scale Figure
-axts.set_ylim([adf.MAG.min() - 0.1, 5])
+axts.set_ylim([df_manual.MAG.min() - 0.1, 5])
 # Label axes
 axts.set_xlabel(f'Hours Since {df.DATETIME.min().strftime("%Y-%m-%d %H:%M:%S")} (UTC)')
 axts.set_ylabel('Magnitude')
 
 # Add completeness magnitude threshold
 xlims = axts.get_xlim()
-axts.plot(xlims, [MIN_MAG]*2, color=(9/255,67/255,9/255, 0.5))
-axts.text(12, MIN_MAG + 0.1, 'Smallest reliably detected earthquakes', ha='center', va='bottom',
+axts.plot(xlims, [MIN_MAG]*2, color=PNSN_Green50)
+midpoint_dt_hrs = 0.5*sum(xlims)
+axts.text(midpoint_dt_hrs, MIN_MAG + 0.1, 'Smallest reliably detected earthquakes', ha='center', va='bottom',
           color=(9/255, 67/255, 9/255, 0.75))
 axts.set_xlim(xlims)
+
+# Add last timestamp for manual assessment
+last_dt_hrs = (last_update - ser_main.DATETIME).total_seconds()/3600
+ylims = axts.get_ylim()
+axts.plot([last_dt_hrs]*2, ylims, ':', color='firebrick')
+axts.set_ylim(ylims)
+axts.text(last_dt_hrs - 2.5, 3.5,'Last Manual\nSearch', color='firebrick',
+          rotation=90, ha='center',va='center')
+
 # ADD PNSN LOGO
 logoax = fig.add_axes([0.01, 0.9, 0.3, 0.3], anchor='SE', zorder=-1)
 im = plt.imread(str(LOGO_PNG))
@@ -187,7 +220,7 @@ if issave:
         os.makedirs(str(FIGPATH), exist_ok=False)
     except:
         pass
-    plt.savefig(str(FIGPATH/f'Aftershock_Timeseries_{DPI}dpi.{FMT}'), format=FMT, dpi=DPI)
+    plt.savefig(str(FIGPATH/f'Aftershock_Timeseries_6MAR2025_{DPI}dpi.{FMT}'), format=FMT, dpi=DPI)
 
 # DISPLAY FIGURE (IF SWITCH IS TURNED ON)
 if isshow:
